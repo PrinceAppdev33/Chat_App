@@ -57,11 +57,25 @@ export const useChatStore = create((set, get) => ({
         messages: [...get().messages, newMessage],
       });
     });
+    socket.on("userTyping", (senderId) => {
+      if (senderId !== selectedUser._id) return;
+    
+      set({ isTyping: true });
+    });
+    
+    socket.on("userStoppedTyping", (senderId) => {
+      if (senderId !== selectedUser._id) return;
+    
+      set({ isTyping: false });
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
+  
     socket.off("newMessage");
+    socket.off("userTyping");
+    socket.off("userStoppedTyping");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
