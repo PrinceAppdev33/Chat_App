@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { THEMES } from "../constants";
 import { useThemeStore } from "../store/useThemeStore";
-import { Send } from "lucide-react";
+import { Send, Bell } from "lucide-react";
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+} from "../lib/notifications";
+import toast from "react-hot-toast";
 
 const PREVIEW_MESSAGES = [
   { id: 1, content: "Hey! How's it going?", isSent: false },
@@ -9,10 +15,46 @@ const PREVIEW_MESSAGES = [
 
 const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
+  const [notifPermission, setNotifPermission] = useState(getNotificationPermission());
+
+  const handleEnableNotifications = async () => {
+    const result = await requestNotificationPermission();
+    setNotifPermission(result);
+    if (result === "granted") toast.success("Notifications enabled");
+    else if (result === "denied") toast.error("Notifications blocked in browser settings");
+    else if (result === "unsupported") toast.error("Browser does not support notifications");
+  };
 
   return (
     <div className="h-screen container mx-auto px-4 pt-20 max-w-5xl">
       <div className="space-y-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Bell className="size-5" />
+            Notifications
+          </h2>
+          <p className="text-sm text-base-content/70">
+            Get browser alerts for new messages when the tab is in the background
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-base-300 bg-base-100">
+          <div className="flex-1">
+            <p className="font-medium text-sm">Browser notifications</p>
+            <p className="text-xs text-base-content/70 mt-1 capitalize">
+              Status: {notifPermission}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={handleEnableNotifications}
+            disabled={notifPermission === "granted"}
+          >
+            {notifPermission === "granted" ? "Enabled" : "Enable"}
+          </button>
+        </div>
+
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Theme</h2>
           <p className="text-sm text-base-content/70">Choose a theme for your chat interface</p>
